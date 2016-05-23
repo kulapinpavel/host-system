@@ -94,11 +94,12 @@ class SiteController extends Controller
     }
     public function actionHello()
     {
-		//$qs = HostSystemOS::copyFolder("/var/www/host.com/public_html/web/index.php", "/var/www/host.com/public_html/SystemScripts/temp123.php");
-        //$qs = HostSystemOS::getCurrentUser();
-        $qs = "123";
-
-		
+		//$qs = HostSystemOS::copyFolder("/var/www/hostsystem/public_html/", "/home/salmon/");
+        //$qs = HostSystemOS::getFilesList("/home/",false);
+        //$qs = HostSystemOS::addVHost("8081","/var/www/hostsystem/public_html/");
+        //$qs = HostSystemOS::addVHost("hostsystem","salmon",8084,"/home/salmon/","salmon","hostsystem");
+        $qs = HostSystemOS::getVHosts("/etc/apache2/sites-available/hostsystem.conf");
+        		
         return $this->render('hello',["hello" => $qs]);
     }
 }

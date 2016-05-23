@@ -2,8 +2,116 @@
 
 namespace app\models;
 
+class vHost {
+	public $name = "";
+	public $value = "";
+	public $params = array();
+
+	function __construct($lines) {
+		//preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", htmlentities(trim($l)), $matches)	- открывающий тег хоста
+		//preg_match("/^<\/$this->name>$/", htmlentities(trim($l)), $matches)					- закрывающий тег хоста
+		//preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", htmlentities(trim($l)), $matches)		- получение параметра
+    	$config = array();
+    	$subtag_opened = false;
+    	$current_key = "";
+
+    	if(preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", trim($lines[0]), $matches)) {
+    		$this->name = $matches["key"];
+    		$this->value = $matches["value"];
+
+			if(preg_match("/^<\/$this->name>$/", trim(end($lines)), $matches)) {
+    			for($i = 1; $i<count($lines)-1; $i++) {
+    				if($subtag_opened) {
+    					if(preg_match("/^<\/$current_key>$/", trim($lines[$i]), $matches)) {
+    						$subtag_opened = false;
+    					}
+    					elseif(preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", trim($lines[$i]), $matches)) {
+    						if (isset($matches['key'])) {
+    							$config[$current_key]["params"][$matches['key']] = $matches['value'];
+    						}
+    					}
+    				}
+    				else {
+						if(preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", trim($lines[$i]), $matches)) {
+							if (isset($matches['key'])) {
+								$config[$matches['key']] = $matches['value'];
+							}
+						}
+						elseif(preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", trim($lines[$i]), $matches)) {
+							$subtag_opened = true;
+							$current_key = $matches['key'];
+
+							$config[$current_key] = array(
+									"value" => $matches['value'],
+									"params" => array()
+								);
+							
+						}
+    				}
+				}
+				$this->params = $config;
+			}
+			else throw new \Exception('Ошибка синтаксиса: не хватает закрывающего тега');
+		}
+		else throw new \Exception('Ошибка синтаксиса: не хватает открывающего тега');
+	}
+    public static function getParams($lines) {
+		/*$config = array();
+
+    	foreach ($lines as $key => $l) {
+    		if(preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", htmlentities(trim($l)), $matches)) {
+    			$this->name = $matches["key"];
+    			$this->value = $matches["value"];
+    		}
+    		elseif(preg_match("/^<\/$this->name>$/", htmlentities(trim($l)), $matches);) {
+    			return $this;
+    		}
+    		else{
+    			preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", htmlentities(trim($l)), $matches);
+			    if (isset($matches['key'])) {
+			        $config[$matches['key']] = $matches['value'];
+			    }
+    		}    
+		}*/
+
+		
+		/*$config["test"] = preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", "<VirtualHost *:8080>", $matches);
+		$qs = $matches['key'];
+		$config["close_tag"] = */
+
+		//return $config;
+    }
+}
 class HostSystemOS extends \yii\db\ActiveRecord
 {
+	public static function getParams($lines) {
+		/*$config = array();
+		$name = "";
+
+    	foreach ($lines as $key => $l) {
+    		if(preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", htmlentities(trim($l)), $matches)) {
+    			$config["Name"] = $matches["key"];
+    			$config["Value"] = $matches["value"];
+    			$name = $config["Name"];
+    		}
+    		elseif(preg_match("/^<\/$name>$/", htmlentities(trim($l)), $matches);) {
+    			return $config;
+    		}
+    		else{
+    			preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", htmlentities(trim($l)), $matches);
+			    if (isset($matches['key'])) {
+			        $config["Params"][$matches['key']] = $matches['value'];
+			    }
+    		}    
+		}*/
+
+		
+		/*$config["test"] = preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", "<VirtualHost *:8080>", $matches);
+		$qs = $matches['key'];
+		$config["close_tag"] = */
+
+		//return $config;
+    }
 	public static function getUsers() {
 		$sys_exec = array();
 		
@@ -39,6 +147,11 @@ class HostSystemOS extends \yii\db\ActiveRecord
 		
 		return $status;
 	}
+	public static function createSymLink($target, $link) {
+		$status = symlink ($target , $link);
+		
+		return $status;
+	}
 	public static function removeFolder($folder_name) {
 		if (is_dir($folder_name)) {
 			$status = rmdir($folder_name);
@@ -50,57 +163,112 @@ class HostSystemOS extends \yii\db\ActiveRecord
 		return $status;
 	}
 	public static function copyFolder($folder_src, $folder_dst) {
-		/*$sys_exec = array();
+		$sys_exec = array();
 
 		$command = "../SystemScripts/copyFolder.sh $folder_src $folder_dst";
 		
-		exec($command, $sys_exec, $error);
+		exec($command, $sys_exec, $status);
 		
-		//return $sys_exec;
-		return [is_dir($folder_dst), $sys_exec, $error];*/
+		return [is_dir($folder_dst), $sys_exec, $status];
+	}
+	public static function copyFile($file_src, $file_dst) {
 		$status = copy ($folder_src, $folder_dst);
 		
 		return $status;
 	}
-	public static function getFolderList($folder = "") {
+	public static function getFilesList($folder = "", $short = false) {
 		$sys_exec = array();
 		$filesArray = array();
-		
-		exec("../SystemScripts/getFolderList.sh ".$folder, $sys_exec);
-		
+
 		if(empty($folder)) {
 			$folder = HostSystemOS::getCurrentFolder()."/";
 		}
-		
-		foreach($sys_exec as $file) {
-			$fArr = array();
-			
-			$attrArr = preg_split("/[\s]+/", $file);
-			
-			if($attrArr[0][0] == "d") {
-				$fArr["FILE_TYPE"] = 'folder';
-			}
-			elseif ($attrArr[0][0] == "l") {
-				$fArr["FILE_TYPE"] = 'link';
-			}
-			else {
-				$fArr["FILE_TYPE"] = 'file';
-			}
-			
-			$fArr["FILE_NAME"] = $attrArr[6];
-			$fArr["ACCESS_MARK"] = $attrArr[0];
-			$fArr["OWNER_NAME"] = $attrArr[2];
-			$fArr["FILE_SIZE"] = $attrArr[3];
-			$fArr["FILE_DATE"] = $attrArr[4];
-			$fArr["FILE_TIME"] = $attrArr[5];
-			$fArr["FILE_FULL_PATH"] = $folder.$attrArr[6];
-			if($fArr["FILE_TYPE"] == 'file') {
-				$fArr["FILE_CHECK_SUM"] = HostSystemOS::getCheckSum($fArr["FILE_FULL_PATH"]);
-			}
-						
-			$filesArray[] = $fArr;
+
+		if($short) {
+			return scandir($folder);
 		}
 		
-		return $filesArray;
+		exec("../SystemScripts/getFolderList.sh ".$folder, $sys_exec);
+
+		if(!empty($sys_exec)) {
+			foreach($sys_exec as $file) {
+				$fArr = array();
+				
+				$attrArr = preg_split("/[\s]+/", $file);
+				
+				if($attrArr[0][0] == "d") {
+					$fArr["FILE_TYPE"] = 'folder';
+				}
+				elseif ($attrArr[0][0] == "l") {
+					$fArr["FILE_TYPE"] = 'link';
+				}
+				else {
+					$fArr["FILE_TYPE"] = 'file';
+				}
+				
+				$fArr["FILE_NAME"] = $attrArr[6];
+				$fArr["ACCESS_MARK"] = $attrArr[0];
+				$fArr["OWNER_NAME"] = $attrArr[2];
+				$fArr["FILE_SIZE"] = $attrArr[3];
+				$fArr["FILE_DATE"] = $attrArr[4];
+				$fArr["FILE_TIME"] = $attrArr[5];
+				$fArr["FILE_FULL_PATH"] = $folder.$attrArr[6];
+				if($fArr["FILE_TYPE"] == 'file') {
+					$fArr["FILE_CHECK_SUM"] = HostSystemOS::getCheckSum($fArr["FILE_FULL_PATH"]);
+				}
+							
+				$filesArray[] = $fArr;
+			}
+			
+			return $sys_exec;
+		}
+		else throw new \Exception('Невозможно отобразить содержимое каталога.');
+	}
+	public static function addVHost($servername,$serveradmim,$port,$docroot,$user_id,$user_group,$host_ip = "*") {
+		
+		$vhost = 
+"<VirtualHost $host_ip:$port>
+	ServerName $servername
+	ServerAdmin $serveradmim
+	DocumentRoot $docroot
+
+	ErrorLog \${APACHE_LOG_DIR}/error.log
+	CustomLog \${APACHE_LOG_DIR}/access.log combined
+
+	<Directory \"$docroot\">
+		AllowOverride All
+	</Directory>
+
+	AssignUserId $user_id $user_group
+</VirtualHost>";
+
+
+		$fp = fopen('/etc/apache2/sites-available/hostsystem.conf', 'at+');
+		$test = fwrite($fp, $vhost);
+		/*if ($test) echo 'Данные в файл успешно занесены.';
+		else echo 'Ошибка при записи в файл.';*/
+		fclose($fp);
+
+		return $test;
+	}
+	public static function getVHosts($filename) {
+		$fp = fopen($filename, 'r');//'/etc/apache2/sites-available/hostsystem.conf'
+		$contents = fread($fp, filesize($filename));
+		fclose($fp);
+		//if(preg_match_all("/(?<=<VirtualHost)(.*)(?=<\/VirtualHost>)/s", $contents, $matches)) return $matches;
+		$result = preg_split("/(?<=VirtualHost>)/s", $contents);
+		$vhosts = array();
+
+		foreach($result as $vhost) {
+			if(preg_match_all("/(?<=<VirtualHost)(.*)(?=<\/VirtualHost>)/s", $vhost, $matches)) {
+				$vhosts[] = new vHost(explode("\n",trim($vhost)));
+			}
+		}
+
+		
+		//$lines = explode("\n",$vhost_string);
+		//$qs = new vHost($lines);
+
+		return $vhosts;
 	}
 }
