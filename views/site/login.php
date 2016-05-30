@@ -24,7 +24,11 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]); ?>
 
-        <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+        <?if(!empty($username)):?>
+            <?= $form->field($model, 'username')->textInput(['readonly' => 'readonly','value' => $username]) ?>
+        <?else:?>
+            <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+        <?endif;?>
 
         <?= $form->field($model, 'password')->passwordInput() ?>
 

@@ -1,0 +1,31 @@
+<?php
+
+namespace app\models;
+
+class Users extends \yii\db\ActiveRecord {
+	public function rules() {
+		return [
+			[["name","password"],"required"]
+		];
+	}
+	public static function getUsers() {
+		$data = self::find()->all();
+
+		return $data;
+	}
+	public static function getUser($username) {
+		$data = self::find()->where(["name" => $username])->all();
+
+		return $data;
+	}
+	public static function validateUser($username, $userpassword) {
+		$data = self::find()
+			->where([
+				"name" => $username,
+				"password" => md5($userpassword)
+				])
+			->all();
+
+		return !empty($data);
+	}
+}

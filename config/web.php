@@ -16,7 +16,7 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User',
+            'identityClass' => 'app\models\UserIdentity',
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
@@ -42,8 +42,10 @@ $config = [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
-            'rules' => [
-            ],
+            'rules'=>array(
+                ''=>'site/index',
+                '<action>'=>'site/<action>',
+            ),
         ],
     ],
     'params' => $params,

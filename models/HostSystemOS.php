@@ -82,7 +82,7 @@ class vHost {
 		//return $config;
     }
 }
-class HostSystemOS extends \yii\db\ActiveRecord
+class HostSystemOS
 {
 	public static function getParams($lines) {
 		/*$config = array();
@@ -125,7 +125,7 @@ class HostSystemOS extends \yii\db\ActiveRecord
 		exec("../SystemScripts/getCurrentUser.sh", $sys_exec);
 		
 		
-		return $sys_exec;
+		return $sys_exec[0];
 	}
 	public static function getCurrentFolder() {
 		$sys_exec = array();
