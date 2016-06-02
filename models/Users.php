@@ -30,10 +30,11 @@ class Users extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'password', 'access_token', 'auth_key', 'port'], 'required'],
+            [['username', 'password', 'access_token', 'auth_key', 'port','hosts_storage','sites_storage'], 'required'],
             [['port'], 'integer'],
-            [['name', 'password', 'access_token', 'auth_key'], 'string', 'max' => 32],
-            [['id', 'name','port'], 'unique']
+            [['username', 'password', 'access_token', 'auth_key'], 'string', 'max' => 32],
+            [['hosts_storage','sites_storage'], 'string'],
+            [['id', 'username','port'], 'unique']
         ];
     }
 
@@ -49,6 +50,8 @@ class Users extends \yii\db\ActiveRecord
             'access_token' => 'Access Token',
             'auth_key' => 'Auth Key',
             'port' => 'Port',
+            'hosts_storage' => 'Host storage directory',
+            'sites_storage' => 'Sites storage directory',
         ];
     }
 }

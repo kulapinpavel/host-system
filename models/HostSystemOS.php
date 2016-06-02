@@ -142,6 +142,13 @@ class HostSystemOS
 		$check_sum = preg_split("/[\s]+/", $sys_exec[0])[0];
 		return $check_sum;
 	}
+	public static function reloadApache() {
+		$sys_exec = array();
+		
+		exec("service apache2 reload", $sys_exec);
+		
+		return $sys_exec;
+	}
 	public static function createFolder($folder_name, $mode = 0755) {
 		$status = mkdir($folder_name, $mode);
 		
@@ -169,7 +176,7 @@ class HostSystemOS
 		
 		exec($command, $sys_exec, $status);
 		
-		return [is_dir($folder_dst), $sys_exec, $status];
+		return is_dir($folder_dst);
 	}
 	public static function copyFile($file_src, $file_dst) {
 		$status = copy ($folder_src, $folder_dst);
@@ -224,7 +231,7 @@ class HostSystemOS
 		}
 		else throw new \Exception('Невозможно отобразить содержимое каталога.');
 	}
-	public static function addVHost($servername,$serveradmim,$port,$docroot,$user_id,$user_group,$host_ip = "*") {
+	public static function addVHost($hostfile,$servername,$serveradmim,$port,$docroot,$user_id,$user_group,$host_ip = "*") {
 		
 		$vhost = 
 "<VirtualHost $host_ip:$port>
@@ -237,16 +244,15 @@ class HostSystemOS
 
 	<Directory \"$docroot\">
 		AllowOverride All
+		Require all granted
 	</Directory>
 
 	AssignUserId $user_id $user_group
 </VirtualHost>";
 
 
-		$fp = fopen('/etc/apache2/sites-available/hostsystem.conf', 'at+');
+		$fp = fopen($hostfile, 'aw');
 		$test = fwrite($fp, $vhost);
-		/*if ($test) echo 'Данные в файл успешно занесены.';
-		else echo 'Ошибка при записи в файл.';*/
 		fclose($fp);
 
 		return $test;
@@ -255,7 +261,6 @@ class HostSystemOS
 		$fp = fopen($filename, 'r');//'/etc/apache2/sites-available/hostsystem.conf'
 		$contents = fread($fp, filesize($filename));
 		fclose($fp);
-		//if(preg_match_all("/(?<=<VirtualHost)(.*)(?=<\/VirtualHost>)/s", $contents, $matches)) return $matches;
 		$result = preg_split("/(?<=VirtualHost>)/s", $contents);
 		$vhosts = array();
 
@@ -264,10 +269,6 @@ class HostSystemOS
 				$vhosts[] = new vHost(explode("\n",trim($vhost)));
 			}
 		}
-
-		
-		//$lines = explode("\n",$vhost_string);
-		//$qs = new vHost($lines);
 
 		return $vhosts;
 	}

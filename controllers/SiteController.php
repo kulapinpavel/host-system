@@ -5,12 +5,21 @@ namespace app\controllers;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\Url;
 use app\models\LoginForm;
+use app\models\HelloForm;
 use app\models\ContactForm;
 use app\models\HostSystemOS;
 use app\models\UserIdentity;
+use app\models\Hosts;
+use app\models\HostsSearch;
+use app\components\FolderViewWidget;
+
+const DEFAULT_HOST = 'default';
+const COPY_CREATE_TYPE = 'copy';
+const EMPTY_CREATE_TYPE = 'empty';
 
 class SiteController extends Controller
 {
@@ -69,9 +78,41 @@ class SiteController extends Controller
         ];
     }
 
-    public function actionIndex()
+    public function actionIndex($id = DEFAULT_HOST)
     {
-        return $this->render('index');
+        $hosts = new Hosts();
+        if($id !== DEFAULT_HOST) {
+            $host = $hosts
+                ->find()
+                ->where([
+                    "user_id" => \Yii::$app->getUser()->getId(),
+                    "id" => $id
+                    ])
+                ->one();
+        }
+        else {
+            $host = $hosts
+                ->find()
+                ->where([
+                    "user_id" => \Yii::$app->getUser()->getId()
+                    ])
+                ->one();
+        }
+        $hostList = $hosts
+                ->find()
+                ->where([
+                    "user_id" => \Yii::$app->getUser()->getId()
+                    ])
+                ->all();
+
+        if(empty($hostList) && !\Yii::$app->getUser()->isGuest) {
+            return $this->redirect('create');
+        }
+            
+        return $this->render('index', [
+            'host' => $host,
+            'hostList' => $hostList
+        ]);
     }
 
     public function actionLogin()
@@ -101,6 +142,70 @@ class SiteController extends Controller
         return $this->goHome();
     }
 
+    /**
+     * Creates a new Hosts model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return mixed
+     */
+    public function actionCreate()
+    {
+        $model = new Hosts();
+        $user = new UserIdentity();
+
+        $post = Yii::$app->request->post();
+
+        if(isset($post['Hosts'])) {
+            $model->load(Yii::$app->request->post("Hosts"));
+
+            if($post['Hosts']['create_type'] == COPY_CREATE_TYPE) {
+                $hosts = new Hosts();
+                $srcHost = $hosts->find()->where(['id' => $post['Hosts']['host_id']])->one();
+
+                if($model->createHost($post['Hosts']['mode'],$srcHost->home_dir)) {
+                    return $this->redirect(["index",'id' => $model->id]);
+                }
+            }
+            elseif($post['Hosts']['create_type'] == EMPTY_CREATE_TYPE) {
+                if($model->createHost($post['Hosts']['mode'])) {
+                    return $this->redirect(["index",'id' => $model->id]);
+                }
+            }
+
+            
+        }
+
+        /*if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['index', 'id' => $model->id]);
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }*/
+
+        $hostList = $model
+                ->find()
+                ->all();
+
+        return $this->render('create', [
+                'model' => $model,
+                'hostList' => $hostList
+            ]);
+    }
+
+    public function actionViewHost($id) {
+        $model = new Hosts();
+        $host = $model
+                ->find()
+                ->where([
+                    "id" => $id
+                    ])
+                ->one();
+        $folder = (isset($host))? $host->home_dir : null;
+        return FolderViewWidget::widget([
+            "folder" => $folder
+        ]);
+    }
+
     public function actionContact()
     {
         $model = new ContactForm();
@@ -121,11 +226,10 @@ class SiteController extends Controller
     public function actionHello()
     {
         $this->layout = "hellopage";
-        $model = new UserIdentity();
+        $model = new HelloForm();
 
-        if(isset($_POST['UserIdentity'])) {
-            $port = UserIdentity::findByUsername($_POST['UserIdentity']["username"])->port;
-            
+        if($model->load(Yii::$app->request->post()) && $model->check()) {
+            $port = $model->port;
             return $this->redirect("http://hostsystem:$port/login");
         }
         		

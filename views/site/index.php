@@ -1,53 +1,45 @@
 <?php
-
+use app\components\FolderViewWidget;
+use yii\bootstrap\Dropdown;
 /* @var $this yii\web\View */
 
-$this->title = 'My Yii Application';
+$this->title = 'Hostsystem control page';
 ?>
-<div class="site-index">
+<?
+$hosts = array();
+foreach ($hostList as $key => $value){
+	if($value->id == $host->id) continue;
 
-    <div class="jumbotron">
-        <h1>Congratulations!</h1>
+	$hosts[] = array("label" => $value->name, "url" => $value->id);
+}
+?>
+<?php if (!\Yii::$app->getUser()->isGuest): ?>
+	<div class="row">
+		<div class="col-md-6">
+			<div class="host">
+				<?if(isset($host)):?>
+					<h3>Хост</h3>
+					<div class="dropdown">
+						<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+							<?=$host->name;?>
+							<span class="caret"></span>
+						</button>
+						<a href="delete/<?=$host->id?>" class="button-delete" title="Удалить хост"><span class="glyphicon glyphicon-minus-sign"></span></a>
+						<a href="create" class="button-create" title="Создать хост"><span class="glyphicon glyphicon-plus-sign"></span></a>
+						<?php
+					        echo Dropdown::widget([
+					            'items' => $hosts,
+					        ]);
+					    ?>
+					</div>
 
-        <p class="lead">You have successfully created your Yii-powered application.</p>
-
-        <p><a class="btn btn-lg btn-success" href="http://www.yiiframework.com">Get started with Yii</a></p>
-    </div>
-
-    <div class="body-content">
-
-        <div class="row">
-            <div class="col-lg-4">
-                <h2>Heading</h2>
-
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                    fugiat nulla pariatur.</p>
-
-                <p><a class="btn btn-default" href="http://www.yiiframework.com/doc/">Yii Documentation &raquo;</a></p>
-            </div>
-            <div class="col-lg-4">
-                <h2>Heading</h2>
-
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                    fugiat nulla pariatur.</p>
-
-                <p><a class="btn btn-default" href="http://www.yiiframework.com/forum/">Yii Forum &raquo;</a></p>
-            </div>
-            <div class="col-lg-4">
-                <h2>Heading</h2>
-
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                    fugiat nulla pariatur.</p>
-
-                <p><a class="btn btn-default" href="http://www.yiiframework.com/extensions/">Yii Extensions &raquo;</a></p>
-            </div>
-        </div>
-
-    </div>
-</div>
+					<?=FolderViewWidget::widget([
+						"folder" => $host->home_dir
+					]);?>
+				<?else:?>
+					<p>Хоста с таким id не существует для данного пользователя</p>	
+				<?endif;?>
+			</div>	
+		</div>
+	</div>
+<?php endif ?>
