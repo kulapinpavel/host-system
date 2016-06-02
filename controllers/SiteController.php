@@ -174,14 +174,6 @@ class SiteController extends Controller
             
         }
 
-        /*if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['index', 'id' => $model->id]);
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }*/
-
         $hostList = $model
                 ->find()
                 ->all();
@@ -190,6 +182,18 @@ class SiteController extends Controller
                 'model' => $model,
                 'hostList' => $hostList
             ]);
+    }
+
+    public function actionDelete($id)
+    {
+        $model = Hosts::findOne($id);
+        if(!empty($model)) {
+            HostSystemOS::removeFolder($model->home_dir);
+            unlink(Yii::$app->user->identity->hosts_storage."/".$model->name.".conf");
+            $model->delete();
+        }        
+
+        return $this->redirect(['index']);
     }
 
     public function actionViewHost($id) {

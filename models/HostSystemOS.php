@@ -159,15 +159,21 @@ class HostSystemOS
 		
 		return $status;
 	}
-	public static function removeFolder($folder_name) {
-		if (is_dir($folder_name)) {
-			$status = rmdir($folder_name);
+	public static function removeFolder($dir) {
+		if (is_dir($dir)) { 
+			$objects = scandir($dir); 
+			foreach ($objects as $object) { 
+				if ($object != "." && $object != "..") { 
+					if (is_dir($dir."/".$object))
+						HostSystemOS::removeFolder($dir."/".$object);
+					else
+						unlink($dir."/".$object); 
+				} 
+			}
+			rmdir($dir); 
 		}
-		else {
-			$status = false;
-		}
-
-		return $status;
+		else return false;
+		return true;
 	}
 	public static function copyFolder($folder_src, $folder_dst) {
 		$sys_exec = array();
