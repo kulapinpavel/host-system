@@ -5,6 +5,30 @@ $(function() {
 	});
 	$('.folder-view a').on('click', function (e) {
 		e.preventDefault();
+		var obj = $(this);
+		var modal = $('.bs-example-modal-lg');
+		var url = 'view-file';
+
+		if(obj.hasClass('file')) {
+			console.log(obj.data("file"));
+			$.ajax({
+		        type: "POST",
+		        data: {
+		        	'file':obj.data("file")
+		        },
+		        processData: true,
+		        url: url,
+		        dataType: "html",
+		        success: function (response) {
+		        	modal.find(".modal-body").html(response);
+		            modal.modal();
+		        },
+		        beforeSend: function () {
+		        },
+		        complete: function () {
+		        }
+		    });
+		}
 	});
 	$('.host-list__switcher').on('click', function (e) {
 		e.preventDefault();

@@ -1,6 +1,7 @@
 <?php
 
 namespace app\models;
+use Yii;
 
 class vHost {
 	public $name = "";
@@ -144,8 +145,13 @@ class HostSystemOS
 	}
 	public static function reloadApache() {
 		$sys_exec = array();
+		//$passfile = "pass";
+
+		//file_put_contents($passfile, Yii::$app->params['adminPasswd']);
 		
-		exec("service apache2 reload", $sys_exec);
+		exec("sudo -g hostsystem -u root '../SystemScripts/reloadApache.sh'", $sys_exec);
+		//sudo -u root -g hostsystem -S service apache2 restart < $passfile
+		//unlink($passfile);
 		
 		return $sys_exec;
 	}
@@ -253,7 +259,9 @@ class HostSystemOS
 		Require all granted
 	</Directory>
 
-	AssignUserId $user_id $user_group
+	<IfModule mod_ruid2.c>
+		RUidGid $user_id $user_group
+	</IfModule>
 </VirtualHost>";
 
 

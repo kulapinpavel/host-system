@@ -13,6 +13,7 @@ use app\models\HelloForm;
 use app\models\ContactForm;
 use app\models\HostSystemOS;
 use app\models\UserIdentity;
+use app\models\UserForm;
 use app\models\Hosts;
 use app\models\HostsSearch;
 use app\components\FolderViewWidget;
@@ -111,7 +112,7 @@ class SiteController extends Controller
             
         return $this->render('index', [
             'host' => $host,
-            'hostList' => $hostList
+            'hostList' => $hostList,
         ]);
     }
 
@@ -193,7 +194,22 @@ class SiteController extends Controller
             $model->delete();
         }        
 
+        HostSystemOS::reloadApache();
+
         return $this->redirect(['index']);
+    }
+
+    public function actionViewFile() {
+        if(isset($_POST["file"])) {
+            $fp = fopen($_POST["file"], 'r');
+            $contents = fread($fp, filesize($_POST["file"]));
+            fclose($fp);
+            return htmlentities($contents);
+        }
+        else {
+            var_dump(Yii::$app->request->post());
+            return "<span style='color:red'>Невозможно отобразить содержимое файла</span>";
+        }
     }
 
     public function actionViewHost($id) {
@@ -207,6 +223,37 @@ class SiteController extends Controller
         $folder = (isset($host))? $host->home_dir : null;
         return FolderViewWidget::widget([
             "folder" => $folder
+        ]);
+    }
+
+    public function actionCreateUser() {
+        $model = new UserForm;
+        $k = array();
+        if($model->load(Yii::$app->request->post()) && $model->validate()) {
+            $k = $model->createUser();
+        }
+
+        return $this->render('user_create', [
+            'model' => $model,
+            'dump' => $k
+        ]);
+    }
+    public function actionDeleteUser() {
+        $users = new UserIdentity;
+
+        $model = $users->find()->select(['id','username'])->all();
+
+        if(Yii::$app->request->post("Users")["id"]) {
+            $k = Yii::$app->request->post("Users")["id"];
+
+            $user = $users->find()->where(["id" => $k])->one();
+            if($user) $user->delete();
+
+            return $this->redirect('index');
+        }
+
+        return $this->render('user_delete', [
+            'model' => $model
         ]);
     }
 
@@ -234,7 +281,8 @@ class SiteController extends Controller
 
         if($model->load(Yii::$app->request->post()) && $model->check()) {
             $port = $model->port;
-            return $this->redirect("http://hostsystem:$port/login");
+            $host = $_SERVER["HTTP_HOST"];
+            return $this->redirect("http://$host:$port/login");
         }
         		
         return $this->render('hello',["model" => $model]);

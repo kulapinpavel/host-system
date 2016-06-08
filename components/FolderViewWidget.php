@@ -66,7 +66,7 @@ class FolderViewWidget extends Widget
 			if (is_dir($f0)) {
 				$fileString .= $this->showTree($f0);
 			}
-			else $fileString .= '<a href="#" class="file">'.$file.'</a>';
+			else $fileString .= '<a href="#" data-file="'.$f0.'" class="file">'.$file.'</a>';
 			$fileString .= '</li>';
 		}
 		$fileString .= '</ul>';

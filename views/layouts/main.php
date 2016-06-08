@@ -6,6 +6,7 @@
 use yii\helpers\Html;
 use yii\bootstrap\Nav;
 use yii\bootstrap\NavBar;
+use yii\bootstrap\Dropdown;
 use yii\widgets\Breadcrumbs;
 use app\assets\AppAsset;
 
@@ -27,7 +28,7 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => (\Yii::$app->getUser()->isGuest)? "Guest" : Yii::$app->user->identity->username,
+        'brandLabel' => 'hostsystem',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
@@ -39,18 +40,24 @@ AppAsset::register($this);
             ['label' => 'Home', 'url' => ['/site/index']],
             ['label' => 'About', 'url' => ['/site/about']],
             ['label' => 'Contact', 'url' => ['/site/contact']],
-            Yii::$app->user->isGuest ? (
-                ['label' => 'Login', 'url' => ['/site/login']]
-            ) : (
-                '<li>'
-                . Html::beginForm(['/site/logout'], 'post')
-                . Html::submitButton(
-                    'Logout (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'btn btn-link']
-                )
-                . Html::endForm()
-                . '</li>'
-            )
+            [
+                'label' => (!\Yii::$app->getUser()->isGuest)? Yii::$app->user->identity->username : "",
+                'items' => [
+                    '<li class="dropdown-header">Доступные действия</li>',
+                    '<li class="divider"></li>',
+                    ['label' => 'Создать пользователя', 'url' => 'create-user'],
+                    ['label' => 'Выйти', 'url' => 'logout'],
+                ],
+            ],
+            /*'<div class="dropdown">'
+                .'<a href="#" data-toggle="dropdown" class="dropdown-toggle">'.Yii::$app->user->identity->username.' <b class="caret"></b></a>'
+                    .Dropdown::widget([
+                        'items' => [
+                            ['label' => '', 'url' => 'user','class' => 'glyphicon glyphicon-pencil'],
+                            ['label' => '', 'url' => 'logout','class' => 'glyphicon glyphicon-off'],
+                        ],
+                    ])
+            .'</div>'*/
         ],
     ]);
     NavBar::end();

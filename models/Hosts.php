@@ -81,6 +81,8 @@ class Hosts extends \yii\db\ActiveRecord
                     return false;
                 }
 
+                HostSystemOS::reloadApache();
+
                 if($homedir && $vhost && $this->save()) {
                     return true;
                 }

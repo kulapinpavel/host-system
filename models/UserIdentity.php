@@ -2,6 +2,8 @@
 
 namespace app\models;
 
+use Yii;
+
 class UserIdentity extends Users implements \yii\web\IdentityInterface
 {
     /**
@@ -17,7 +19,8 @@ class UserIdentity extends Users implements \yii\web\IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        return static::findOne(["access_token" => $token]);
+        //return static::findOne(["access_token" => $token]);
+        throw new NotSupportedException('access tokens not implementer');
     }
 
     /* Finds user by socket */
@@ -60,6 +63,9 @@ class UserIdentity extends Users implements \yii\web\IdentityInterface
         return $this->auth_key === $authKey;
     }
 
+    public function generateAuthKey() {
+        $this->auth_key = Yii::$app->security->generateRandomString();
+    }
     /**
      * Validates password
      *
@@ -68,6 +74,6 @@ class UserIdentity extends Users implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        return $this->password === md5($password);
+        return $this->validatePassword($password);
     }
 }

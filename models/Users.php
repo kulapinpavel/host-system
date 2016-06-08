@@ -30,14 +30,20 @@ class Users extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['username', 'password', 'access_token', 'auth_key', 'port','hosts_storage','sites_storage'], 'required'],
+            [['username', 'password', 'port','hosts_storage','sites_storage'], 'required'],
             [['port'], 'integer'],
-            [['username', 'password', 'access_token', 'auth_key'], 'string', 'max' => 32],
+            [['username', 'password'], 'string', 'max' => 60],
             [['hosts_storage','sites_storage'], 'string'],
-            [['id', 'username','port'], 'unique']
+            [['username','port'], 'unique']
         ];
     }
 
+    public function setPassword($password) {
+        $this->password = Yii::$app->security->generatePasswordHash($password);
+    }
+    public function validatePassword($password) {
+        return Yii::$app->security->validatePassword($password, $this->password);
+    }
     /**
      * @inheritdoc
      */
@@ -47,8 +53,6 @@ class Users extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'password' => 'Password',
-            'access_token' => 'Access Token',
-            'auth_key' => 'Auth Key',
             'port' => 'Port',
             'hosts_storage' => 'Host storage directory',
             'sites_storage' => 'Sites storage directory',
