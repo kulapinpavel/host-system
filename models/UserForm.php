@@ -57,7 +57,7 @@ class UserForm extends Model {
     		else {
     			$user->is_admin = 0;
     		}
-    		
+    		HostSystemOS::createUser($user->username, $this->password, $user->port);    		
 
     		$user->save();
 

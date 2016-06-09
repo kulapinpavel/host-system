@@ -46,6 +46,7 @@ AppAsset::register($this);
                     '<li class="dropdown-header">Доступные действия</li>',
                     '<li class="divider"></li>',
                     ['label' => 'Создать пользователя', 'url' => 'create-user'],
+                    ['label' => 'Удалить пользователя', 'url' => 'delete-user'],
                     ['label' => 'Выйти', 'url' => 'logout'],
                 ],
             ],

@@ -286,4 +286,18 @@ class HostSystemOS
 
 		return $vhosts;
 	}
+	public static function deleteUser($username, $port, $delete_homedir = false) {
+		/*$sys_exec = array();
+
+		exec("sudo -g hostsystem -u root '../SystemScripts/createUser.sh' $username $password $port", $sys_exec);
+		
+		return $sys_exec;*/
+	}
+	public static function createUser($username, $password, $port) {
+		$sys_exec = array();
+
+		exec("sudo -g hostsystem -u root '../SystemScripts/createUser.sh' $username $password $port", $sys_exec);
+
+		return $sys_exec;
+	}
 }

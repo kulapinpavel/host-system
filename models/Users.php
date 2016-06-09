@@ -43,6 +43,7 @@ class Users extends \yii\db\ActiveRecord
     }
     public function validatePassword($password) {
         return Yii::$app->security->validatePassword($password, $this->password);
+        //return $this->password === md5($password);
     }
     /**
      * @inheritdoc
