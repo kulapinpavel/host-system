@@ -33,7 +33,7 @@ foreach ($hostList as $key => $value){
 				</div>
 			</div>
 		</div>
-		<div class="row">
+		<div class="row margintop">
 			<div class="col-md-6">
 				<div class="host">
 						<?=FolderViewWidget::widget([

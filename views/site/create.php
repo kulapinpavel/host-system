@@ -7,7 +7,6 @@ use yii\bootstrap\Tabs;
 /* @var $model app\models\Hosts */
 
 $this->title = 'Cоздать хост';
-$this->params['breadcrumbs'][] = ['label' => 'Hosts', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="hosts-create">

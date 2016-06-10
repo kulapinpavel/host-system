@@ -56,63 +56,9 @@ class vHost {
 		}
 		else throw new \Exception('Ошибка синтаксиса: не хватает открывающего тега');
 	}
-    public static function getParams($lines) {
-		/*$config = array();
-
-    	foreach ($lines as $key => $l) {
-    		if(preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", htmlentities(trim($l)), $matches)) {
-    			$this->name = $matches["key"];
-    			$this->value = $matches["value"];
-    		}
-    		elseif(preg_match("/^<\/$this->name>$/", htmlentities(trim($l)), $matches);) {
-    			return $this;
-    		}
-    		else{
-    			preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", htmlentities(trim($l)), $matches);
-			    if (isset($matches['key'])) {
-			        $config[$matches['key']] = $matches['value'];
-			    }
-    		}    
-		}*/
-
-		
-		/*$config["test"] = preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", "<VirtualHost *:8080>", $matches);
-		$qs = $matches['key'];
-		$config["close_tag"] = */
-
-		//return $config;
-    }
 }
 class HostSystemOS
 {
-	public static function getParams($lines) {
-		/*$config = array();
-		$name = "";
-
-    	foreach ($lines as $key => $l) {
-    		if(preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", htmlentities(trim($l)), $matches)) {
-    			$config["Name"] = $matches["key"];
-    			$config["Value"] = $matches["value"];
-    			$name = $config["Name"];
-    		}
-    		elseif(preg_match("/^<\/$name>$/", htmlentities(trim($l)), $matches);) {
-    			return $config;
-    		}
-    		else{
-    			preg_match("/^(?P<key>\w+)\s+(?P<value>.*)/", htmlentities(trim($l)), $matches);
-			    if (isset($matches['key'])) {
-			        $config["Params"][$matches['key']] = $matches['value'];
-			    }
-    		}    
-		}*/
-
-		
-		/*$config["test"] = preg_match("/^<(?P<key>\w+)\s+(?P<value>.*)>$/", "<VirtualHost *:8080>", $matches);
-		$qs = $matches['key'];
-		$config["close_tag"] = */
-
-		//return $config;
-    }
 	public static function getUsers() {
 		$sys_exec = array();
 		
@@ -135,35 +81,12 @@ class HostSystemOS
 		
 		return $sys_exec[0];
 	}
-	public static function getCheckSum($file) {
-		$sys_exec = array();
-		
-		exec("../SystemScripts/getCheckSum.sh ".$file, $sys_exec);
-		
-		$check_sum = preg_split("/[\s]+/", $sys_exec[0])[0];
-		return $check_sum;
-	}
 	public static function reloadApache() {
 		$sys_exec = array();
-		//$passfile = "pass";
-
-		//file_put_contents($passfile, Yii::$app->params['adminPasswd']);
 		
 		exec("sudo -g hostsystem -u root '../SystemScripts/reloadApache.sh'", $sys_exec);
-		//sudo -u root -g hostsystem -S service apache2 restart < $passfile
-		//unlink($passfile);
 		
 		return $sys_exec;
-	}
-	public static function createFolder($folder_name, $mode = 0755) {
-		$status = mkdir($folder_name, $mode);
-		
-		return $status;
-	}
-	public static function createSymLink($target, $link) {
-		$status = symlink ($target , $link);
-		
-		return $status;
 	}
 	public static function removeFolder($dir) {
 		if (is_dir($dir)) { 
@@ -287,11 +210,16 @@ class HostSystemOS
 		return $vhosts;
 	}
 	public static function deleteUser($username, $port, $delete_homedir = false) {
-		/*$sys_exec = array();
+		$sys_exec = array();
 
-		exec("sudo -g hostsystem -u root '../SystemScripts/createUser.sh' $username $password $port", $sys_exec);
-		
-		return $sys_exec;*/
+		if($delete_homedir) {
+			exec("sudo -g hostsystem -u root '../SystemScripts/deleteUser.sh' $username $port true", $sys_exec);
+		}
+		else {
+			exec("sudo -g hostsystem -u root '../SystemScripts/deleteUser.sh' $username $port false", $sys_exec);
+		}
+				
+		return $sys_exec;
 	}
 	public static function createUser($username, $password, $port) {
 		$sys_exec = array();

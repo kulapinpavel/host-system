@@ -34,8 +34,13 @@ useradd -m -G hostsystem $user_id;
 echo $user_id:$password | chpasswd
 
 mkdir /home/$user_id/apache2
+chown $user_id:hostsystem /home/$user_id/apache2
+
 mkdir /home/$user_id/apache2/sites-enabled
+chown $user_id:hostsystem /home/$user_id/apache2/sites-enabled
+
 mkdir /home/$user_id/www
+chown $user_id:hostsystem /home/$user_id/www
 
 echo "Listen $port" >> /etc/apache2/ports.conf
 echo "IncludeOptional /home/$user_id/apache2/sites-enabled/*.conf" >> /etc/apache2/apache2.conf

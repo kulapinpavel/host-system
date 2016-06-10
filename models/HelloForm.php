@@ -27,6 +27,13 @@ class HelloForm extends Model
             [['username'], 'checkUser']
         ];
     }
+    public function attributeLabels()
+    {
+        return [
+            'username' => 'Пользователь',
+        ];
+    }
+
     public function checkUser($attribute) {
     	if(!$this->hasErrors()) {
     		$user = UserIdentity::findByUsername($this->username);

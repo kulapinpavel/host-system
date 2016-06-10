@@ -4,6 +4,7 @@
 /* @var $content string */
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\bootstrap\Nav;
 use yii\bootstrap\NavBar;
 use yii\bootstrap\Dropdown;
@@ -11,6 +12,20 @@ use yii\widgets\Breadcrumbs;
 use app\assets\AppAsset;
 
 AppAsset::register($this);
+
+$available_actions = [
+    '<li class="dropdown-header">Доступные действия</li>',
+    '<li class="divider"></li>',
+];
+if(isset(Yii::$app->user->identity)){
+    if(Yii::$app->user->identity->is_admin) {
+        $available_actions[] = ['label' => 'Создать пользователя', 'url' => 'create-user'];
+        $available_actions[] = ['label' => 'Удалить пользователя', 'url' => 'delete-user'];
+    }
+}
+$available_actions[] = ['label' => 'Изменить пароль', 'url' => 'change-password'];
+$available_actions[] = ['label' => 'Выйти', 'url' => 'logout'];
+
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -28,7 +43,7 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'hostsystem',
+        'brandLabel' => 'Система управления хостингом',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
@@ -37,18 +52,11 @@ AppAsset::register($this);
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav navbar-right'],
         'items' => [
-            ['label' => 'Home', 'url' => ['/site/index']],
-            ['label' => 'About', 'url' => ['/site/about']],
-            ['label' => 'Contact', 'url' => ['/site/contact']],
+            ['label' => 'Обзор хостов', 'url' => ['/site/index']],
+            ['label' => 'Создание хоста', 'url' => ['/site/create']],
             [
                 'label' => (!\Yii::$app->getUser()->isGuest)? Yii::$app->user->identity->username : "",
-                'items' => [
-                    '<li class="dropdown-header">Доступные действия</li>',
-                    '<li class="divider"></li>',
-                    ['label' => 'Создать пользователя', 'url' => 'create-user'],
-                    ['label' => 'Удалить пользователя', 'url' => 'delete-user'],
-                    ['label' => 'Выйти', 'url' => 'logout'],
-                ],
+                'items' => $available_actions,
             ],
             /*'<div class="dropdown">'
                 .'<a href="#" data-toggle="dropdown" class="dropdown-toggle">'.Yii::$app->user->identity->username.' <b class="caret"></b></a>'
@@ -67,6 +75,7 @@ AppAsset::register($this);
     <div class="container">
         <?= Breadcrumbs::widget([
             'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
+            'homeLink' => ['label' => 'Главная', 'url' => '/'],
         ]) ?>
         <?= $content ?>
     </div>
@@ -74,7 +83,7 @@ AppAsset::register($this);
 
 <footer class="footer">
     <div class="container">
-        <p class="pull-left">&copy; My Company <?= date('Y') ?></p>
+        <p class="pull-left">&copy; Digital Spectr <?= date('Y') ?></p>
 
         <p class="pull-right"><?= Yii::powered() ?></p>
     </div>

@@ -13,6 +13,7 @@ use app\models\HelloForm;
 use app\models\ContactForm;
 use app\models\HostSystemOS;
 use app\models\UserIdentity;
+use app\models\ChangePasswordForm;
 use app\models\UserForm;
 use app\models\Hosts;
 use app\models\HostsSearch;
@@ -199,19 +200,6 @@ class SiteController extends Controller
         return $this->redirect(['index']);
     }
 
-    public function actionViewFile() {
-        if(isset($_POST["file"])) {
-            $fp = fopen($_POST["file"], 'r');
-            $contents = fread($fp, filesize($_POST["file"]));
-            fclose($fp);
-            return htmlentities($contents);
-        }
-        else {
-            var_dump(Yii::$app->request->post());
-            return "<span style='color:red'>Невозможно отобразить содержимое файла</span>";
-        }
-    }
-
     public function actionViewHost($id) {
         $model = new Hosts();
         $host = $model
@@ -226,28 +214,58 @@ class SiteController extends Controller
         ]);
     }
 
-    public function actionCreateUser() {
-        $model = new UserForm;
-        $k = array();
+    public function actionChangePassword() {
+        $model = new ChangePasswordForm();
+        
         if($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $k = $model->createUser();
+            if($model->changePassword()) {
+                return $this->redirect('index');
+            }
+        }
+
+        return $this->render('change_password', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionCreateUser() {
+        if(!Yii::$app->user->identity->is_admin) {
+            return $this->redirect('index');
+        }
+        $model = new UserForm;
+        
+        if($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if($model->createUser()) {
+                return $this->redirect('index');
+            }
         }
 
         return $this->render('user_create', [
             'model' => $model,
-            'dump' => $k
         ]);
     }
     public function actionDeleteUser() {
+        if(!Yii::$app->user->identity->is_admin) {
+            return $this->redirect('index');
+        }
         $users = new UserIdentity;
 
         $model = $users->find()->select(['id','username'])->all();
 
         if(Yii::$app->request->post("Users")["id"]) {
-            $k = Yii::$app->request->post("Users")["id"];
+            $k = Yii::$app->request->post("Users");
+            if(Yii::$app->user->identity->id == $k["id"])
+                return $this->render('user_delete', [
+                    'model' => $model,
+                    'error' => "Пользователь не может удалить сам себя"
+                ]);
 
-            $user = $users->find()->where(["id" => $k])->one();
-            if($user) $user->delete();
+            $user = $users->find()->where(["id" => $k["id"]])->one();
+            if($user) {
+                if(!isset($k["delete_homedir"])) $k["delete_homedir"] = false;
+                HostSystemOS::deleteUser($user->username, $user->port, $k["delete_homedir"]);
+                $user->delete();
+            }
 
             return $this->redirect('index');
         }
@@ -257,7 +275,7 @@ class SiteController extends Controller
         ]);
     }
 
-    public function actionContact()
+    /*public function actionContact()
     {
         $model = new ContactForm();
         if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
@@ -268,12 +286,12 @@ class SiteController extends Controller
         return $this->render('contact', [
             'model' => $model,
         ]);
-    }
+    }*/
 
-    public function actionAbout()
+    /*public function actionAbout()
     {
         return $this->render('about');
-    }
+    }*/
     public function actionHello()
     {
         $this->layout = "hellopage";
