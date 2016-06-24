@@ -83,6 +83,8 @@ class SiteController extends Controller
     public function actionIndex($id = DEFAULT_HOST)
     {
         $hosts = new Hosts();
+        $hostList = array();
+
         if($id !== DEFAULT_HOST) {
             $host = $hosts
                 ->find()
@@ -100,15 +102,61 @@ class SiteController extends Controller
                     ])
                 ->one();
         }
-        $hostList = $hosts
+
+        if(!\Yii::$app->getUser()->isGuest) {
+            if(Yii::$app->user->identity->is_admin) {
+                if($id !== DEFAULT_HOST) {
+                    $host = $hosts
+                        ->find()
+                        ->where([
+                            "id" => $id
+                            ])
+                        ->one();
+                }
+                else {
+                    $host = $hosts
+                        ->find()
+                        ->one();
+                }
+
+                $hostList = $hosts
+                    ->find()
+                    ->all();
+
+                if(count($hostList)) {
+                    $user = new UserIdentity();
+                    $users = $user->find()->select(["id","username"])->all();
+                    $user_list = array();
+                    foreach ($users as $key => $usr) {
+                        $user_list[$usr->id] = $usr->username;
+                    }
+
+                    return $this->render('index', [
+                        'host' => $host,
+                        'hostList' => $hostList,
+                        'is_admin' => true,
+                        'user_list' => $user_list
+                    ]);
+                }
+            }
+            else {
+                $hostList = $hosts
                 ->find()
                 ->where([
                     "user_id" => \Yii::$app->getUser()->getId()
                     ])
                 ->all();
+            }
 
-        if(empty($hostList) && !\Yii::$app->getUser()->isGuest) {
-            return $this->redirect('create');
+            if(empty($hostList)) {
+                return $this->redirect('create');
+            }
+        }
+        if(!$host) {
+            return $this->render('error',[
+                'name' => "Ошибка отображения хоста",
+                'message' => "Такого хоста не существует для данного пользователя"
+            ]);
         }
             
         return $this->render('index', [
@@ -189,11 +237,37 @@ class SiteController extends Controller
     public function actionDelete($id)
     {
         $model = Hosts::findOne($id);
-        if(!empty($model)) {
-            HostSystemOS::removeFolder($model->home_dir);
-            unlink(Yii::$app->user->identity->hosts_storage."/".$model->name.".conf");
-            $model->delete();
-        }        
+        $user = Yii::$app->user->identity;
+
+        if($model) {
+            if($user->is_admin) {
+                $host_owner = UserIdentity::findIdentity($model->user_id);
+                $k = HostSystemOS::deleteHost($model->home_dir, $host_owner->hosts_storage."/".$model->name.".conf");
+                $model->delete();
+            }
+            else {
+                if($model->user_id == $user->id) {
+                    if(!empty($model)) {
+                        HostSystemOS::removeFolder($model->home_dir);
+                        unlink(Yii::$app->user->identity->hosts_storage."/".$model->name.".conf");
+                        $model->delete();
+                    }
+                }
+                else {
+                    return $this->render('error',[
+                        'name' => "Ошибка удаления хоста",
+                        'message' => "Такого хоста не существует или у Вас нет прав на его удаление"
+                    ]);
+                }
+            }
+        }
+        else {
+            return $this->render('error',[
+                'name' => "Ошибка удаления хоста",
+                'message' => "Такого хоста не существует или у Вас нет прав на его удаление"
+            ]);
+        }
+        
 
         HostSystemOS::reloadApache();
 
@@ -230,7 +304,11 @@ class SiteController extends Controller
 
     public function actionCreateUser() {
         if(!Yii::$app->user->identity->is_admin) {
-            return $this->redirect('index');
+            //return $this->redirect('index');
+            return $this->render('error',[
+                'name' => "Ошибка доступа",
+                'message' => "У Вас нет прав на создание пользователей"
+            ]);
         }
         $model = new UserForm;
         
@@ -246,20 +324,42 @@ class SiteController extends Controller
     }
     public function actionDeleteUser() {
         if(!Yii::$app->user->identity->is_admin) {
-            return $this->redirect('index');
+            //return $this->redirect('index');
+            return $this->render('error',[
+                'name' => "Ошибка доступа",
+                'message' => "У Вас нет прав на удаление пользователей"
+            ]);
         }
         $users = new UserIdentity;
+        $hosts = new Hosts();
 
         $model = $users->find()->select(['id','username'])->all();
 
+
         if(Yii::$app->request->post("Users")["id"]) {
             $k = Yii::$app->request->post("Users");
-            if(Yii::$app->user->identity->id == $k["id"])
+
+            $host = $hosts
+                ->find()
+                ->where([
+                    "user_id" => $k["id"]
+                    ])
+                ->select(["id"])
+                ->all();
+            if(count($host)) {
+                return $this->render('user_delete', [
+                    'model' => $model,
+                    'error' => "Пользователь, которого Вы пытаетесь удалить имеет активные хосты. Необходимо сначала удалить их."
+                ]);
+            }
+
+            if(Yii::$app->user->identity->id == $k["id"]) {
                 return $this->render('user_delete', [
                     'model' => $model,
                     'error' => "Пользователь не может удалить сам себя"
                 ]);
-
+            }
+            
             $user = $users->find()->where(["id" => $k["id"]])->one();
             if($user) {
                 if(!isset($k["delete_homedir"])) $k["delete_homedir"] = false;

@@ -2,6 +2,7 @@
 namespace app\models;
 
 use app\models\UserIdentity;
+use app\models\HostSystemOS;
 use Yii\base\model;
 use Yii;
 
@@ -16,6 +17,7 @@ class UserForm extends Model {
         return [
             [['username', 'password', 'password_confirm'], 'required', 'message' => '{attribute} не может быть пустым'],
             [['username', 'password', 'password_confirm'], 'string'],
+            [['username'], 'checkUser'],
             [['is_admin'],'integer'],
             [['username'], 'unique', 'targetClass' => '\app\models\Users','message' => '{attribute} должно быть уникальным'],
             ['password_confirm', 'compare', 'compareAttribute' => 'password','message' => '{attribute} должно совпадать с введённым паролем']
@@ -31,7 +33,12 @@ class UserForm extends Model {
             'is_admin' => 'Администратор'
         ];
     }
-
+    public function checkUser($attribute) {
+        $users = HostSystemOS::getUsers();
+        if (in_array($this->username, $users)) {
+            $this->addError($attribute, 'Пользователь с таким именем уже существует в операционной системе.');
+        }
+    }
     public function createUser($host_storage_dir = "/apache2/sites-enabled", $sites_storage_dir = "/www") {
     	if($this->validate()) {
     		$max_port = 0;
@@ -57,7 +64,7 @@ class UserForm extends Model {
     		else {
     			$user->is_admin = 0;
     		}
-    		HostSystemOS::createUser($user->username, $this->password, $user->port);    		
+    		HostSystemOS::createUser($user->username, $this->password, $user->port, $user->is_admin == 1);    		
 
     		$user->save();
 

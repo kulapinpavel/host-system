@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 			</select>
 
 			<div class="del-homedir margintop">
-				<label><input id="del-homedir__checkbox" name="Users[delete_homedir]" value="1" type="checkbox"> Удалить домашнюю папку пользователя</label>
+				<label><input id="del-homedir__checkbox" name="Users[delete_homedir]" value="1" type="checkbox"> Удалить домашний каталог пользователя</label>
 				<div class="alert alert-warning" style="display:none" role="alert">
 					Необходимо осторожно подходить к данной операции, так как домашняя папка пользователя может содержать ресурсы, принадлежащие пользователю
 				</div>
@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 		</div>
 	    <div class="form-group">
-	        <?= Html::submitButton('Удалить') ?>
+	        <?= Html::submitButton('Удалить',['onclick' => "return confirm('Действительно удалить данного пользователя?');"]) ?>
 	    </div>
     <?php ActiveForm::end(); ?>
 </div>

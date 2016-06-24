@@ -25,7 +25,40 @@ class Hosts extends \yii\db\ActiveRecord
     {
         return 'hosts';
     }
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        return [
+            [['name', 'home_dir', 'user_id'], 'required', 'message' => '{attribute} не может быть пустым'],
+            [['name','home_dir'],'unique','message' => '{attribute} уже существует'],
+            [['home_dir'], 'string'],
+            [['home_dir'], 'validateHomeDir'],
+            [['user_id'], 'integer'],
+            [['name'], 'string', 'max' => 255]
+        ];
+    }
 
+    /**
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'Идентификатор хоста',
+            'name' => 'Имя хоста',
+            'home_dir' => 'Домашний каталог хоста',
+            'user_id' => 'Идентификатор пользователя владельца хоста',
+        ];
+    }
+
+    public function validateHomeDir($attribute) {
+        $user = Yii::$app->user->identity;
+        if (!preg_match("/\/home\/".$user->username."\/www*/", $this->home_dir)) { // && !preg_match("/\/var\/www*/", $this->home_dir) -- валидация /var/www
+            $this->addError($attribute, 'Хост должен располагаться в каталоге-хранилище хостов данного пользователя: '.$user->sites_storage/*.' или /var/www'*/);
+        }
+    }
     public function load( $data, $formName = null ) {
         $user = UserIdentity::findByUsername(Yii::$app->user->identity->username);
 
@@ -121,32 +154,6 @@ class Hosts extends \yii\db\ActiveRecord
             }
         }
         else return false;
-    }
-    /**
-     * @inheritdoc
-     */
-    public function rules()
-    {
-        return [
-            [['name', 'home_dir', 'user_id'], 'required', 'message' => '{attribute} не может быть пустым'],
-            [['name','home_dir'],'unique','message' => '{attribute} уже существует'],
-            [['home_dir'], 'string'],
-            [['user_id'], 'integer'],
-            [['name'], 'string', 'max' => 255]
-        ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'Идентификатор хоста',
-            'name' => 'Имя хоста',
-            'home_dir' => 'Домашний каталог хоста',
-            'user_id' => 'Идентификатор пользователя владельца хоста',
-        ];
     }
 
     /**

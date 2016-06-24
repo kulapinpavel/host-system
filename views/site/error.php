@@ -17,11 +17,9 @@ $this->title = $name;
         <?= nl2br(Html::encode($message)) ?>
     </div>
 
-    <p>
-        The above error occurred while the Web server was processing your request.
-    </p>
-    <p>
-        Please contact us if you think this is a server error. Thank you.
-    </p>
-
+    <?if(Yii::$app->request->referrer):?>
+        <?=Html::a('Назад', Yii::$app->request->referrer);?>
+    <?else:?>  
+        <?=Html::a('Назад', "/");?>
+    <?endif;?>  
 </div>

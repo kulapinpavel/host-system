@@ -213,18 +213,30 @@ class HostSystemOS
 		$sys_exec = array();
 
 		if($delete_homedir) {
-			exec("sudo -g hostsystem -u root '../SystemScripts/deleteUser.sh' $username $port true", $sys_exec);
+			exec("sudo -g hostsystem_admin -u root '../SystemScripts/deleteUser.sh' $username $port true", $sys_exec);
 		}
 		else {
-			exec("sudo -g hostsystem -u root '../SystemScripts/deleteUser.sh' $username $port false", $sys_exec);
+			exec("sudo -g hostsystem_admin -u root '../SystemScripts/deleteUser.sh' $username $port false", $sys_exec);
 		}
 				
 		return $sys_exec;
 	}
-	public static function createUser($username, $password, $port) {
+	public static function createUser($username, $password, $port, $is_admin) {
+		$sys_exec = array();
+		
+		if($is_admin) {
+			exec("sudo -g hostsystem_admin -u root '../SystemScripts/createUser.sh' $username $password $port true", $sys_exec);
+		}
+		else {
+			exec("sudo -g hostsystem_admin -u root '../SystemScripts/createUser.sh' $username $password $port false", $sys_exec);
+		}
+
+		return $sys_exec;
+	}
+	public static function deleteHost($homedir, $hostconf) {
 		$sys_exec = array();
 
-		exec("sudo -g hostsystem -u root '../SystemScripts/createUser.sh' $username $password $port", $sys_exec);
+		exec("sudo -g hostsystem_admin -u root '../SystemScripts/deleteHost.sh' $homedir $hostconf", $sys_exec);
 
 		return $sys_exec;
 	}

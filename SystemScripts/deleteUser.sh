@@ -20,4 +20,3 @@ else
 fi
 
 service apache2 reload
-sed -i "/IncludeOptional /home/$user_id/apache2/sites-enabled/*.conf/d" /etc/apache2/apache2.conf

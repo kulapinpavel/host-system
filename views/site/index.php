@@ -7,10 +7,21 @@ $this->title = 'Hostsystem control page';
 ?>
 <?
 $hosts = array();
-foreach ($hostList as $key => $value){
-	if($value->id == $host->id) continue;
+if(isset($host)) {
+	if(isset($is_admin)) {
+	foreach ($hostList as $key => $value){
+		if($value->id == $host->id) continue;
 
-	$hosts[] = array("label" => $value->name, "url" => $value->id);
+		$hosts[] = array("label" => $value->name.' ('.$user_list[$value->user_id].")", "url" => $value->id);
+	}
+	}
+	else {
+		foreach ($hostList as $key => $value){
+			if($value->id == $host->id) continue;
+
+			$hosts[] = array("label" => $value->name, "url" => $value->id);
+		}
+	}
 }
 ?>
 <?php if (!\Yii::$app->getUser()->isGuest): ?>
@@ -20,10 +31,14 @@ foreach ($hostList as $key => $value){
 				<h3>Хост</h3>
 				<div class="dropdown">
 					<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-						<?=$host->name;?>
+						<?if(isset($is_admin)):?>
+							<?=$host->name.' ('.$user_list[$host->user_id].")";?>
+						<?else:?>
+							<?=$host->name;?>
+						<?endif;?>
 						<span class="caret"></span>
 					</button>
-					<a href="delete/<?=$host->id?>" class="button-delete" title="Удалить хост"><span class="glyphicon glyphicon-minus-sign"></span></a>
+					<a href="delete/<?=$host->id?>" class="button-delete" title="Удалить хост" onclick="return confirm('Вы действительно хотите удалить этот хост?');"><span class="glyphicon glyphicon-minus-sign"></span></a>
 					<a href="create" class="button-create" title="Создать хост"><span class="glyphicon glyphicon-plus-sign"></span></a>
 					<?php
 				        echo Dropdown::widget([
@@ -55,6 +70,6 @@ foreach ($hostList as $key => $value){
 			</div>
 		</div>
 	<?else:?>
-		<p>Хоста с таким id не существует для данного пользователя</p>	
+		<div class="alert alert-danger" role="alert">Хоста с таким id не существует для данного пользователя</div>
 	<?endif;?>
 <?php endif ?>

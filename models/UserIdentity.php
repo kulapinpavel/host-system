@@ -20,7 +20,7 @@ class UserIdentity extends Users implements \yii\web\IdentityInterface
     public static function findIdentityByAccessToken($token, $type = null)
     {
         //return static::findOne(["access_token" => $token]);
-        throw new NotSupportedException('access tokens not implementer');
+        throw new NotSupportedException('access tokens is not implemented');
     }
 
     /* Finds user by socket */

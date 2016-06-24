@@ -2,11 +2,18 @@
 user_id=$1;
 password=$2;
 port=$3;
+is_admin=$4;
 host_ip='*';
 servername='hostsystem';
 serveradmin='kulapinpavel@yandex.ru';
 docroot='/var/www/hostsystem/public_html/web';
-user_group='hostsystem';
+if $is_admin
+then
+        user_group='hostsystem_admin';
+else
+        user_group='hostsystem';
+fi
+
 
 cat << EOF >> /etc/apache2/sites-available/$user_id.hostsystem.conf
 <VirtualHost $host_ip:$port>
@@ -30,8 +37,17 @@ EOF
 
 a2ensite $user_id.hostsystem.conf
 
-useradd -m -G hostsystem $user_id;
-echo $user_id:$password | chpasswd
+if $is_admin
+then
+        useradd -m -G hostsystem_admin,hostsystem $user_id;
+        echo $user_id:$password | chpasswd
+else
+        useradd -m -G hostsystem $user_id;
+        echo $user_id:$password | chpasswd
+fi
+
+#useradd -m -G hostsystem $user_id;
+#echo $user_id:$password | chpasswd
 
 mkdir /home/$user_id/apache2
 chown $user_id:hostsystem /home/$user_id/apache2

@@ -25,7 +25,7 @@ else {
 		    ->textInput([
 		    	'readonly' => 'true',
 		    	'id'=>'hosts-home_dir-2',
-		    	'value' => $sites_storage,
+		    	'value' => ($model->home_dir)? $model->home_dir : $sites_storage,
 		    	'data-homedir' => $sites_storage,
 		    	]) ?>
 
@@ -54,7 +54,7 @@ else {
 			</div>
 			<div class="folderview"><?=FolderViewWidget::widget(["folder" => $hostList[0]->home_dir]);?></div>
 	    </div>
-	<div>
+	</div>
     <?php ActiveForm::end(); ?>
 </div>
 <?php 
